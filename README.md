@@ -26,7 +26,14 @@ git tag v1.0.0
 git push origin v1.0.0
 ```
 
-Before the first build, generate one Android release signing key and add these GitHub Actions repository secrets under **Settings → Secrets and variables → Actions**: `ANDROID_SIGNING_KEY_BASE64` (the base64-encoded keystore), `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, and `ANDROID_KEY_PASSWORD`. Keep a secure backup of the keystore and use that same key for every release so newer APKs can update an existing installation. Never commit the keystore or its passwords.
+Before the first build, generate one Android release signing key in PowerShell:
+
+```powershell
+keytool -genkeypair -v -keystore "$env:USERPROFILE\photovault-release.keystore" -alias photovault -keyalg RSA -keysize 2048 -validity 10000
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("$env:USERPROFILE\photovault-release.keystore")) | Set-Clipboard
+```
+
+Keep the keystore and passwords in a secure backup; never commit them or send them in chat. In the repository's **Settings → Secrets and variables → Actions**, add `ANDROID_SIGNING_KEY_BASE64` (paste the clipboard contents) and `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` (`photovault`), and `ANDROID_KEY_PASSWORD` using the values you entered during key generation. Use that same signing key for every release so Android accepts each APK as an update to the previous install.
 
 After the workflow succeeds, download the APK from the GitHub Release on the Android phone and install it. Android may ask you to allow installation from that browser. GitHub provides the new APK for each release; Android does not silently install the update. The APK is a native Android app with phone media access; the web preview cannot access phone media.
 
