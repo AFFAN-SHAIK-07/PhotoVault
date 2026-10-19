@@ -1,0 +1,444 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.2.0
+  description: >
+    PhotoVault health and family-sharing API. Sharing requires PostgreSQL and a
+    locally configured private media directory. See docs/sharing-api.md for
+    setup and deployment limitations.
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+  - name: accounts
+  - name: rooms
+  - name: albums
+  - name: media
+security:
+  - bearerAuth: []
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      security: []
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: ok }
+                required: [status]
+  /auth/register:
+    post:
+      operationId: register
+      tags: [accounts]
+      security: []
+      summary: Create account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Credentials"
+      responses:
+        "201": { $ref: "#/components/responses/JsonResponse" }
+        "400": { $ref: "#/components/responses/ErrorResponse" }
+        "409": { $ref: "#/components/responses/ErrorResponse" }
+  /auth/login:
+    post:
+      operationId: login
+      tags: [accounts]
+      security: []
+      summary: Create a 30-day bearer session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Credentials"
+      responses:
+        "200": { $ref: "#/components/responses/JsonResponse" }
+        "401": { $ref: "#/components/responses/ErrorResponse" }
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [accounts]
+      summary: Revoke current session
+      responses:
+        "204": { description: Session revoked }
+  /auth/me:
+    get:
+      operationId: getCurrentUser
+      tags: [accounts]
+      summary: Get current account
+      responses:
+        "200": { $ref: "#/components/responses/JsonResponse" }
+  /invitations/accept:
+    post:
+      operationId: acceptInvitation
+      tags: [rooms]
+      summary: Accept a bearer invitation token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InvitationAcceptance"
+      responses:
+        "200": { $ref: "#/components/responses/JsonResponse" }
+        "404": { $ref: "#/components/responses/ErrorResponse" }
+  /rooms:
+    get:
+      operationId: listRooms
+      tags: [rooms]
+      summary: List rooms for current account
+      responses:
+        "200": { $ref: "#/components/responses/JsonResponse" }
+    post:
+      operationId: createRoom
+      tags: [rooms]
+      summary: Create a room
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RoomCreation"
+      responses:
+        "201": { $ref: "#/components/responses/JsonResponse" }
+  /rooms/{roomId}:
+    parameters:
+      - $ref: "#/components/parameters/RoomId"
+    delete:
+      operationId: deleteRoom
+      tags: [rooms]
+      summary: Delete room and shared media (owner only)
+      responses:
+        "204": { description: Room deleted }
+        "403": { $ref: "#/components/responses/ErrorResponse" }
+  /rooms/{roomId}/members:
+    parameters:
+      - $ref: "#/components/parameters/RoomId"
+    get:
+      operationId: listRoomMembers
+      tags: [rooms]
+      summary: List room members
+      responses:
+        "200": { $ref: "#/components/responses/JsonResponse" }
+  /rooms/{roomId}/members/me:
+    parameters:
+      - $ref: "#/components/parameters/RoomId"
+    delete:
+      operationId: leaveRoom
+      tags: [rooms]
+      summary: Leave room (owner must delete or transfer the room)
+      responses:
+        "204": { description: Membership removed }
+        "409": { $ref: "#/components/responses/ErrorResponse" }
+  /rooms/{roomId}/members/{userId}:
+    parameters:
+      - $ref: "#/components/parameters/RoomId"
+      - $ref: "#/components/parameters/UserId"
+    patch:
+      operationId: updateMemberRole
+      tags: [rooms]
+      summary: Set member role (owner only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MemberRoleUpdate"
+      responses:
+        "200": { $ref: "#/components/responses/JsonResponse" }
+    delete:
+      operationId: removeMember
+      tags: [rooms]
+      summary: Remove member (owner/admin)
+      responses:
+        "204": { description: Membership removed }
+  /rooms/{roomId}/invitations:
+    parameters:
+      - $ref: "#/components/parameters/RoomId"
+    get:
+      operationId: listInvitations
+      tags: [rooms]
+      summary: List invitations (owner/admin)
+      responses:
+        "200": { $ref: "#/components/responses/JsonResponse" }
+    post:
+      operationId: createInvitation
+      tags: [rooms]
+      summary: Create a seven-day bearer invitation (owner/admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InvitationCreation"
+      responses:
+        "201": { $ref: "#/components/responses/JsonResponse" }
+  /rooms/{roomId}/invitations/{invitationId}:
+    parameters:
+      - $ref: "#/components/parameters/RoomId"
+      - $ref: "#/components/parameters/InvitationId"
+    delete:
+      operationId: revokeInvitation
+      tags: [rooms]
+      summary: Revoke active invitation (owner/admin)
+      responses:
+        "204": { description: Invitation revoked }
+  /rooms/{roomId}/albums:
+    parameters:
+      - $ref: "#/components/parameters/RoomId"
+    get:
+      operationId: listSharedAlbums
+      tags: [albums]
+      summary: List shared albums
+      responses:
+        "200": { $ref: "#/components/responses/JsonResponse" }
+    post:
+      operationId: createSharedAlbum
+      tags: [albums]
+      summary: Create shared album
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AlbumInput"
+      responses:
+        "201": { $ref: "#/components/responses/JsonResponse" }
+  /albums/{albumId}:
+    parameters:
+      - $ref: "#/components/parameters/AlbumId"
+    patch:
+      operationId: updateSharedAlbum
+      tags: [albums]
+      summary: Update shared album (owner/admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AlbumInput"
+      responses:
+        "200": { $ref: "#/components/responses/JsonResponse" }
+    delete:
+      operationId: deleteSharedAlbum
+      tags: [albums]
+      summary: Delete album and its media (owner/admin)
+      responses:
+        "204": { description: Album deleted }
+  /albums/{albumId}/media:
+    parameters:
+      - $ref: "#/components/parameters/AlbumId"
+    get:
+      operationId: listSharedMedia
+      tags: [media]
+      summary: List shared media
+      responses:
+        "200": { $ref: "#/components/responses/JsonResponse" }
+    post:
+      operationId: uploadSharedMedia
+      tags: [media]
+      summary: Upload one signature-validated photo or video
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/MediaUpload"
+      responses:
+        "201": { $ref: "#/components/responses/JsonResponse" }
+        "413": { $ref: "#/components/responses/ErrorResponse" }
+        "415": { $ref: "#/components/responses/ErrorResponse" }
+  /media/{mediaId}:
+    parameters:
+      - $ref: "#/components/parameters/MediaId"
+    delete:
+      operationId: deleteSharedMedia
+      tags: [media]
+      summary: Delete uploaded media (uploader/owner/admin)
+      responses:
+        "204": { description: Media deleted }
+  /media/{mediaId}/content:
+    parameters:
+      - $ref: "#/components/parameters/MediaId"
+    get:
+      operationId: downloadSharedMedia
+      tags: [media]
+      summary: Stream media after current-membership check
+      responses:
+        "200":
+          description: Media bytes
+          content:
+            image/*:
+              schema: { type: string, format: binary }
+            video/*:
+              schema: { type: string, format: binary }
+  /media/{mediaId}/comments:
+    parameters:
+      - $ref: "#/components/parameters/MediaId"
+    get:
+      operationId: listMediaComments
+      tags: [media]
+      summary: List comments
+      responses:
+        "200": { $ref: "#/components/responses/JsonResponse" }
+    post:
+      operationId: createMediaComment
+      tags: [media]
+      summary: Add comment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MediaComment"
+      responses:
+        "201": { $ref: "#/components/responses/JsonResponse" }
+  /media/{mediaId}/reactions:
+    parameters:
+      - $ref: "#/components/parameters/MediaId"
+    get:
+      operationId: listMediaReactions
+      tags: [media]
+      summary: List reaction counts and users
+      responses:
+        "200": { $ref: "#/components/responses/JsonResponse" }
+    put:
+      operationId: setMediaReaction
+      tags: [media]
+      summary: Set a reaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MediaReaction"
+      responses:
+        "200": { $ref: "#/components/responses/JsonResponse" }
+  /media/{mediaId}/reactions/{reaction}:
+    parameters:
+      - $ref: "#/components/parameters/MediaId"
+      - name: reaction
+        in: path
+        required: true
+        schema: { type: string, enum: [like, love, laugh, wow] }
+    delete:
+      operationId: removeMediaReaction
+      tags: [media]
+      summary: Remove current user's reaction
+      responses:
+        "204": { description: Reaction removed }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: opaque
+  parameters:
+    RoomId:
+      name: roomId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    UserId:
+      name: userId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    InvitationId:
+      name: invitationId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    AlbumId:
+      name: albumId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    MediaId:
+      name: mediaId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  schemas:
+    Credentials:
+      type: object
+      properties:
+        email: { type: string, format: email, maxLength: 254 }
+        password: { type: string, minLength: 12, maxLength: 128 }
+      required: [email, password]
+    AlbumInput:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        description: { type: string, maxLength: 500 }
+        membersCanAdd: { type: boolean }
+      required: [name]
+    InvitationAcceptance:
+      type: object
+      properties:
+        token: { type: string, minLength: 32, maxLength: 128 }
+      required: [token]
+    RoomCreation:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+      required: [name]
+    MemberRoleUpdate:
+      type: object
+      properties:
+        role: { type: string, enum: [admin, member] }
+      required: [role]
+    InvitationCreation:
+      type: object
+      additionalProperties: false
+    MediaUpload:
+      type: object
+      properties:
+        file: { type: string, format: binary }
+      required: [file]
+    MediaComment:
+      type: object
+      properties:
+        body: { type: string, minLength: 1, maxLength: 1000 }
+      required: [body]
+    MediaReaction:
+      type: object
+      properties:
+        reaction: { type: string, enum: [like, love, laugh, wow] }
+      required: [reaction]
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: { type: string }
+            message: { type: string }
+          required: [code, message]
+      required: [error]
+  responses:
+    JsonResponse:
+      description: JSON response
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: true
+    ErrorResponse:
+      description: Request or authorization error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"

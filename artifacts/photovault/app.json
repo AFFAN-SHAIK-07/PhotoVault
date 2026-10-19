@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "PhotoVault",
+    "slug": "photovault",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "photovault",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": false
+    },
+    "android": {
+      "package": "com.photovault.mobile",
+      "blockedPermissions": [
+        "android.permission.READ_MEDIA_AUDIO",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/images/icon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow PhotoVault to display photos already stored on your device.",
+          "videosPermission": "Allow PhotoVault to display videos already stored on your device.",
+          "savePhotosPermission": "Allow PhotoVault to make changes you explicitly request to selected media.",
+          "isAccessMediaLocationEnabled": false
+        }
+      ],
+      "expo-video"
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}
