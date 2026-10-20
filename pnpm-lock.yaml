@@ -225,7 +225,7 @@ overrides:
   js-yaml: 4.3.2
 
 patchedDependencies:
-  onnxruntime-react-native@1.24.3: 3cb367e975fa5bbce6eb77e6e9293464a2cf7189e8215194be91f84f43562b7a
+  onnxruntime-react-native@1.24.3: 2abb1f9d63ac289547cb14540001ee549c07ef476d20a7781328868cd4160e64
 
 importers:
 
@@ -531,7 +531,7 @@ importers:
         version: 0.4.4
       onnxruntime-react-native:
         specifier: 1.24.3
-        version: 1.24.3(patch_hash=3cb367e975fa5bbce6eb77e6e9293464a2cf7189e8215194be91f84f43562b7a)(react-native@0.86.3(@babel/core@7.29.7(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
+        version: 1.24.3(patch_hash=2abb1f9d63ac289547cb14540001ee549c07ef476d20a7781328868cd4160e64)(react-native@0.86.3(@babel/core@7.29.7(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
       react:
         specifier: 19.2.3
         version: 19.2.3
@@ -10570,7 +10570,7 @@ snapshots:
 
   onnxruntime-common@1.24.3: {}
 
-  onnxruntime-react-native@1.24.3(patch_hash=3cb367e975fa5bbce6eb77e6e9293464a2cf7189e8215194be91f84f43562b7a)(react-native@0.86.3(@babel/core@7.29.7(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3):
+  onnxruntime-react-native@1.24.3(patch_hash=2abb1f9d63ac289547cb14540001ee549c07ef476d20a7781328868cd4160e64)(react-native@0.86.3(@babel/core@7.29.7(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3):
     dependencies:
       onnxruntime-common: 1.24.3
       react: 19.2.3
