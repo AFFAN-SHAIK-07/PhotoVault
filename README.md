@@ -22,8 +22,8 @@ pnpm dev
 Each version tag builds a signed Android APK and attaches it to a GitHub Release. You can also run the **Android APK** workflow from the repository's Actions page; its APK is available as a temporary workflow artifact.
 
 ```powershell
-git tag v1.0.2
-git push origin v1.0.2
+git tag v1.0.3
+git push origin v1.0.3
 ```
 
 Before the first build, generate one Android release signing key in PowerShell:
