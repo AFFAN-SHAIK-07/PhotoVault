@@ -8,7 +8,7 @@ import React, {
   useState,
 } from 'react';
 import { AppState, Platform } from 'react-native';
-import * as MediaLibrary from 'expo-media-library';
+import * as MediaLibrary from 'expo-media-library/legacy';
 import { useSQLiteContext } from 'expo-sqlite';
 import {
   addMediaToAlbum as addMediaToAlbumInDb,
@@ -272,8 +272,12 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       try {
-        const current = await MediaLibrary.getPermissionsAsync(false, ['photo', 'video']);
+        let current = await MediaLibrary.getPermissionsAsync(false, ['photo', 'video']);
         if (!mounted) return;
+        if (current.status === 'undetermined') {
+          current = await MediaLibrary.requestPermissionsAsync(false, ['photo', 'video']);
+          if (!mounted) return;
+        }
         applyPermission(current);
         setPermissionChecking(false);
         if (current.granted) {

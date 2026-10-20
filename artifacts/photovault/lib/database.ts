@@ -3,10 +3,14 @@ import type {
   AlbumMediaRecord,
   AlbumSort,
   AlbumSummary,
+  FaceScanRecord,
+  FaceAnalysisSettings,
   MediaRecord,
+  PersonFaceRecord,
+  PersonSummary,
 } from './types';
 
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 
 export async function initializeDatabase(database: SQLiteDatabase): Promise<void> {
   await database.execAsync('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
@@ -62,6 +66,26 @@ export async function initializeDatabase(database: SQLiteDatabase): Promise<void
         value TEXT NOT NULL
       );
 
+      CREATE TABLE IF NOT EXISTS people (
+        id TEXT PRIMARY KEY NOT NULL,
+        name TEXT NOT NULL,
+        created_at INTEGER NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS person_faces (
+        id TEXT PRIMARY KEY NOT NULL,
+        media_id TEXT NOT NULL REFERENCES media(id) ON DELETE CASCADE,
+        person_id TEXT NOT NULL REFERENCES people(id) ON DELETE CASCADE,
+        embedding TEXT NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS face_scans (
+        media_id TEXT PRIMARY KEY NOT NULL REFERENCES media(id) ON DELETE CASCADE,
+        modification_time INTEGER NOT NULL,
+        scanned_at INTEGER NOT NULL,
+        model_version TEXT NOT NULL
+      );
+
       CREATE INDEX IF NOT EXISTS idx_media_creation_time
         ON media (creation_time DESC);
       CREATE INDEX IF NOT EXISTS idx_media_type
@@ -72,6 +96,10 @@ export async function initializeDatabase(database: SQLiteDatabase): Promise<void
         ON album_media (album_id, sort_order, added_at DESC);
       CREATE INDEX IF NOT EXISTS idx_albums_order
         ON albums (sort_order, updated_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_person_faces_person
+        ON person_faces (person_id);
+      CREATE INDEX IF NOT EXISTS idx_person_faces_media
+        ON person_faces (media_id);
     `);
     await database.execAsync(`PRAGMA user_version = ${SCHEMA_VERSION};`);
   });
@@ -131,6 +159,9 @@ export async function removeMediaNotSeenInScan(
   scanId: string,
 ): Promise<void> {
   await database.runAsync('DELETE FROM media WHERE last_seen_scan_id <> ?', scanId);
+  await database.runAsync(
+    'DELETE FROM people WHERE NOT EXISTS (SELECT 1 FROM person_faces WHERE person_id = people.id)',
+  );
 }
 
 export async function removeMediaByIds(
@@ -142,6 +173,9 @@ export async function removeMediaByIds(
     for (const mediaId of mediaIds) {
       await database.runAsync('DELETE FROM media WHERE id = ?', mediaId);
     }
+    await database.runAsync(
+      'DELETE FROM people WHERE NOT EXISTS (SELECT 1 FROM person_faces WHERE person_id = people.id)',
+    );
   });
 }
 
@@ -474,7 +508,148 @@ export async function moveAlbum(
 
 export async function clearLocalIndex(database: SQLiteDatabase): Promise<void> {
   await database.withTransactionAsync(async () => {
+    await database.runAsync('DELETE FROM people');
     await database.runAsync('DELETE FROM media');
     await database.runAsync("DELETE FROM app_meta WHERE key IN ('last_scan_at', 'last_scan_count')");
   });
+}
+
+export async function getFaceAnalysisSettings(
+  database: SQLiteDatabase,
+): Promise<FaceAnalysisSettings> {
+  const rows = await database.getAllAsync<{ key: string; value: string }>(
+    `SELECT key, value FROM app_meta
+     WHERE key IN ('face_analysis_consented', 'face_analysis_paused')`,
+  );
+  const values = new Map(rows.map((row) => [row.key, row.value]));
+  return {
+    consented: values.get('face_analysis_consented') === '1',
+    paused: values.get('face_analysis_paused') !== '0',
+  };
+}
+
+export async function setFaceAnalysisSettings(
+  database: SQLiteDatabase,
+  settings: FaceAnalysisSettings,
+): Promise<void> {
+  await database.withTransactionAsync(async () => {
+    await database.runAsync(
+      `INSERT INTO app_meta (key, value) VALUES ('face_analysis_consented', ?)
+       ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+      settings.consented ? '1' : '0',
+    );
+    await database.runAsync(
+      `INSERT INTO app_meta (key, value) VALUES ('face_analysis_paused', ?)
+       ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+      settings.paused ? '1' : '0',
+    );
+  });
+}
+
+export async function getPeople(database: SQLiteDatabase): Promise<PersonSummary[]> {
+  return database.getAllAsync<PersonSummary>(`
+    SELECT
+      p.id,
+      p.name,
+      COUNT(DISTINCT pf.media_id) AS faceCount,
+      (
+        SELECT m.uri
+        FROM person_faces face
+        JOIN media m ON m.id = face.media_id
+        WHERE face.person_id = p.id
+        ORDER BY m.creation_time DESC
+        LIMIT 1
+      ) AS coverUri
+    FROM people p
+    JOIN person_faces pf ON pf.person_id = p.id
+    GROUP BY p.id
+    ORDER BY p.name COLLATE NOCASE ASC
+  `);
+}
+
+export async function getPersonFaces(
+  database: SQLiteDatabase,
+  personId?: string,
+): Promise<PersonFaceRecord[]> {
+  const query = personId
+    ? `SELECT id, media_id AS mediaId, person_id AS personId, embedding
+       FROM person_faces WHERE person_id = ? ORDER BY id`
+    : 'SELECT id, media_id AS mediaId, person_id AS personId, embedding FROM person_faces';
+  const rows = await database.getAllAsync<
+    Omit<PersonFaceRecord, 'embedding'> & { embedding: string }
+  >(query, ...(personId ? [personId] : []));
+  return rows.map((row) => ({ ...row, embedding: JSON.parse(row.embedding) as number[] }));
+}
+
+export async function saveFaceScan(
+  database: SQLiteDatabase,
+  mediaId: string,
+  modificationTime: number,
+  modelVersion: string,
+  faces: Array<PersonFaceRecord & { personName: string }>,
+): Promise<void> {
+  await database.withTransactionAsync(async () => {
+    await database.runAsync('DELETE FROM person_faces WHERE media_id = ?', mediaId);
+    const newPeople = new Map(faces.map((face) => [face.personId, face.personName]));
+    for (const [personId, name] of newPeople) {
+      await database.runAsync(
+        'INSERT OR IGNORE INTO people (id, name, created_at) VALUES (?, ?, ?)',
+        personId,
+        name,
+        Date.now(),
+      );
+    }
+    for (const face of faces) {
+      await database.runAsync(
+        `INSERT INTO person_faces (id, media_id, person_id, embedding)
+         VALUES (?, ?, ?, ?)`,
+        face.id,
+        mediaId,
+        face.personId,
+        JSON.stringify(face.embedding),
+      );
+    }
+    await database.runAsync(
+      `INSERT INTO face_scans (media_id, modification_time, scanned_at, model_version)
+       VALUES (?, ?, ?, ?)
+       ON CONFLICT(media_id) DO UPDATE SET
+         modification_time = excluded.modification_time,
+         scanned_at = excluded.scanned_at,
+         model_version = excluded.model_version`,
+      mediaId,
+      modificationTime,
+      Date.now(),
+      modelVersion,
+    );
+    await database.runAsync(
+      'DELETE FROM people WHERE NOT EXISTS (SELECT 1 FROM person_faces WHERE person_id = people.id)',
+    );
+  });
+}
+
+export async function getFaceScans(database: SQLiteDatabase): Promise<FaceScanRecord[]> {
+  return database.getAllAsync<FaceScanRecord>(
+    `SELECT media_id AS mediaId, modification_time AS modificationTime,
+            model_version AS modelVersion
+     FROM face_scans`,
+  );
+}
+
+export async function renamePerson(
+  database: SQLiteDatabase,
+  personId: string,
+  name: string,
+): Promise<void> {
+  await database.runAsync('UPDATE people SET name = ? WHERE id = ?', name, personId);
+}
+
+export async function deleteFaceAnalysisData(database: SQLiteDatabase): Promise<void> {
+  await database.withTransactionAsync(async () => {
+    await database.runAsync('DELETE FROM people');
+    await database.runAsync('DELETE FROM face_scans');
+    await database.runAsync(
+      "DELETE FROM app_meta WHERE key IN ('face_analysis_consented', 'face_analysis_paused')",
+    );
+  });
+  await database.execAsync('PRAGMA wal_checkpoint(TRUNCATE)');
 }

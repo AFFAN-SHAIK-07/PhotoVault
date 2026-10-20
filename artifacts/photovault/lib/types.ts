@@ -47,6 +47,31 @@ export type AlbumMediaRecord = MediaRecord & {
 
 export type AlbumSort = 'date-taken' | 'date-added' | 'name';
 
+export type PersonSummary = {
+  id: string;
+  name: string;
+  faceCount: number;
+  coverUri: string | null;
+};
+
+export type PersonFaceRecord = {
+  id: string;
+  mediaId: string;
+  personId: string;
+  embedding: number[];
+};
+
+export type FaceScanRecord = {
+  mediaId: string;
+  modificationTime: number;
+  modelVersion: string;
+};
+
+export type FaceAnalysisSettings = {
+  consented: boolean;
+  paused: boolean;
+};
+
 export type ScanProgress = {
   processed: number;
   total: number;

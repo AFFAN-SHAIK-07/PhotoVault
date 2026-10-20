@@ -4,6 +4,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { AppUpdatePrompt } from '@/components/AppUpdatePrompt';
 import { LibraryProvider } from '@/context/LibraryContext';
 import { initializeDatabase } from '@/lib/database';
 import {
@@ -26,6 +27,7 @@ function RootLayoutNav() {
   return (
     <Stack screenOptions={{ headerBackTitle: 'Back' }}>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="people" options={{ headerShown: false }} />
     </Stack>
   );
 }
@@ -57,6 +59,7 @@ export default function RootLayout() {
                 onInit={initializeDatabase}
               >
                 <LibraryProvider>
+                  <AppUpdatePrompt />
                   <RootLayoutNav />
                 </LibraryProvider>
               </SQLiteProvider>

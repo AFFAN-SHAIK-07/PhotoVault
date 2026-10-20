@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { ScreenHeader } from '@/components/ScreenHeader';
+import { UpdateCenter } from '@/components/UpdateCenter';
 import { useLibrary } from '@/context/LibraryContext';
 import { useColors } from '@/hooks/useColors';
 
@@ -99,6 +100,8 @@ export default function SettingsScreen() {
           <StatusRow label="Automatic cloud upload" value="Off" />
           <StatusRow label="Google account" value="Optional; stored on this phone only" last />
         </View>
+
+        <UpdateCenter />
 
         <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Text style={[styles.cardTitle, { color: colors.foreground }]}>Device library</Text>
@@ -259,32 +262,32 @@ function ActionButton({
 
 const styles = StyleSheet.create({
   page: { flex: 1 },
-  content: { padding: 18, paddingBottom: 120, gap: 13 },
-  summaryCard: { padding: 16, borderWidth: 1, borderRadius: 18 },
-  summaryHeader: { flexDirection: 'row', alignItems: 'center', gap: 11, marginBottom: 8 },
-  summaryIcon: { width: 38, height: 38, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
+  content: { padding: 20, paddingBottom: 128, gap: 16 },
+  summaryCard: { padding: 19, borderWidth: 1, borderRadius: 24 },
+  summaryHeader: { flexDirection: 'row', alignItems: 'center', gap: 13, marginBottom: 12 },
+  summaryIcon: { width: 44, height: 44, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
   summaryCopy: { flex: 1 },
-  card: { padding: 16, borderWidth: 1, borderRadius: 18 },
-  cardTitle: { fontFamily: 'Inter_700Bold', fontSize: 15 },
-  cardSubtitle: { marginTop: 5, fontFamily: 'Inter_400Regular', fontSize: 11, lineHeight: 17 },
-  statusRow: { minHeight: 38, paddingVertical: 8, flexDirection: 'row', alignItems: 'center', gap: 12 },
-  statusLabel: { flex: 1, fontFamily: 'Inter_400Regular', fontSize: 11 },
-  statusValue: { maxWidth: '53%', textAlign: 'right', fontFamily: 'Inter_600SemiBold', fontSize: 10 },
-  buttonColumn: { marginTop: 13, gap: 8 },
+  card: { padding: 19, borderWidth: 1, borderRadius: 24 },
+  cardTitle: { fontFamily: 'Inter_700Bold', fontSize: 17, letterSpacing: -0.25 },
+  cardSubtitle: { marginTop: 7, fontFamily: 'Inter_400Regular', fontSize: 13, lineHeight: 20 },
+  statusRow: { minHeight: 48, paddingVertical: 10, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  statusLabel: { flex: 1, fontFamily: 'Inter_400Regular', fontSize: 12 },
+  statusValue: { maxWidth: '53%', textAlign: 'right', fontFamily: 'Inter_600SemiBold', fontSize: 12 },
+  buttonColumn: { marginTop: 16, gap: 9 },
   actionButton: {
-    minHeight: 42,
-    paddingHorizontal: 12,
+    minHeight: 48,
+    paddingHorizontal: 14,
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: 15,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 9,
   },
-  actionButtonText: { fontFamily: 'Inter_600SemiBold', fontSize: 11 },
-  scanProgress: { marginTop: 11, fontFamily: 'Inter_600SemiBold', fontSize: 11 },
-  error: { marginTop: 10, fontFamily: 'Inter_500Medium', fontSize: 11, lineHeight: 17 },
-  webNote: { marginTop: 10, fontFamily: 'Inter_400Regular', fontSize: 11, lineHeight: 17 },
-  appearanceRow: { marginTop: 13, flexDirection: 'row', alignItems: 'center', gap: 9 },
-  appearanceText: { fontFamily: 'Inter_500Medium', fontSize: 12 },
-  footer: { paddingHorizontal: 4, fontFamily: 'Inter_400Regular', fontSize: 10, lineHeight: 16 },
+  actionButtonText: { fontFamily: 'Inter_600SemiBold', fontSize: 13 },
+  scanProgress: { marginTop: 13, fontFamily: 'Inter_600SemiBold', fontSize: 12 },
+  error: { marginTop: 12, fontFamily: 'Inter_500Medium', fontSize: 12, lineHeight: 19 },
+  webNote: { marginTop: 12, fontFamily: 'Inter_400Regular', fontSize: 12, lineHeight: 19 },
+  appearanceRow: { marginTop: 15, flexDirection: 'row', alignItems: 'center', gap: 11 },
+  appearanceText: { fontFamily: 'Inter_500Medium', fontSize: 13 },
+  footer: { paddingHorizontal: 4, fontFamily: 'Inter_400Regular', fontSize: 11, lineHeight: 18 },
 });

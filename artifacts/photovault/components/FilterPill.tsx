@@ -24,8 +24,8 @@ export function FilterPill({
       onPress={onPress}
       style={({ pressed }) => [
         {
-          minHeight: 36,
-          paddingHorizontal: 14,
+          minHeight: 35,
+          paddingHorizontal: 15,
           borderRadius: 99,
           alignItems: 'center',
           justifyContent: 'center',
@@ -41,7 +41,7 @@ export function FilterPill({
         style={{
           color: active ? colors.primaryForeground : colors.secondaryForeground,
           fontFamily: 'Inter_600SemiBold',
-          fontSize: 12,
+          fontSize: 11,
         }}
       >
         {label}

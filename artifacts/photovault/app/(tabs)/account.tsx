@@ -275,18 +275,48 @@ export default function AccountScreen() {
         ) : (
           <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <View style={[styles.accountIcon, { backgroundColor: colors.accent }]}>
-              <Feather name="user" size={20} color={colors.accentForeground} />
+              <Text style={[styles.googleMark, { color: colors.foreground }]}>G</Text>
             </View>
-            <Text style={[styles.cardTitle, { color: colors.foreground }]}>Google sign-in is optional</Text>
-            <Text style={[styles.note, { color: colors.mutedForeground }]}>
-              Add the Google OAuth client IDs to the private .env file to enable account memory.
-              Until then, PhotoVault works without an account. Signing in will not upload your media.
+            <Text style={[styles.cardTitle, { color: colors.foreground }]}>
+              Sign in with Google
             </Text>
-            {Platform.OS === 'web' ? (
-              <Text style={[styles.note, { color: colors.mutedForeground }]}>
-                Configure EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID for this browser preview.
+            <Text style={[styles.note, { color: colors.mutedForeground }]}>
+              Remember your Google profile on this phone. Photos, videos, and albums stay on your
+              device and are never uploaded.
+            </Text>
+            <View
+              style={[
+                styles.setupNotice,
+                { backgroundColor: colors.muted, borderColor: colors.border },
+              ]}
+            >
+              <Feather name="info" size={15} color={colors.mutedForeground} />
+              <Text style={[styles.setupNoticeText, { color: colors.mutedForeground }]}>
+                Google sign-in needs OAuth client IDs before it can be enabled
+                {Platform.OS === 'web' ? ' in this browser preview' : ' in this app build'}.
               </Text>
-            ) : null}
+            </View>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Google sign-in setup required"
+              testID="google-sign-in-unconfigured"
+              disabled
+              style={({ pressed }) => [
+                styles.googleButton,
+                styles.unconfiguredButton,
+                { borderColor: colors.border },
+                pressed && styles.pressed,
+              ]}
+            >
+              <Text style={[styles.googleMarkSmall, { color: colors.foreground }]}>G</Text>
+              <Text style={[styles.googleButtonText, { color: colors.foreground }]}>
+                Continue with Google
+              </Text>
+            </Pressable>
+            <Text style={[styles.setupHint, { color: colors.mutedForeground }]}>
+              Add the OAuth IDs from your Google Cloud project to the private environment file,
+              then rebuild the app.
+            </Text>
           </View>
         )}
       </View>
@@ -296,34 +326,49 @@ export default function AccountScreen() {
 
 const styles = StyleSheet.create({
   page: { flex: 1 },
-  content: { flex: 1, justifyContent: 'center', padding: 22, paddingBottom: 100 },
-  card: { padding: 20, borderWidth: 1, borderRadius: 18 },
+  content: { flex: 1, justifyContent: 'center', padding: 22, paddingBottom: 112 },
+  card: { padding: 23, borderWidth: 1, borderRadius: 24 },
   accountIcon: {
-    width: 48,
-    height: 48,
-    marginBottom: 16,
-    borderRadius: 16,
+    width: 54,
+    height: 54,
+    marginBottom: 18,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  cardTitle: { fontFamily: 'Inter_700Bold', fontSize: 19, lineHeight: 25 },
-  note: { marginTop: 10, fontFamily: 'Inter_400Regular', fontSize: 13, lineHeight: 20 },
+  googleMark: { fontFamily: 'Inter_700Bold', fontSize: 25 },
+  googleMarkSmall: { fontFamily: 'Inter_700Bold', fontSize: 17 },
+  cardTitle: { fontFamily: 'Inter_700Bold', fontSize: 21, lineHeight: 28, letterSpacing: -0.4 },
+  note: { marginTop: 11, fontFamily: 'Inter_400Regular', fontSize: 14, lineHeight: 22 },
   googleButton: {
-    minHeight: 48,
-    marginTop: 18,
+    minHeight: 54,
+    marginTop: 20,
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
   },
-  googleButtonText: { fontFamily: 'Inter_600SemiBold', fontSize: 13 },
+  googleButtonText: { fontFamily: 'Inter_600SemiBold', fontSize: 14 },
+  unconfiguredButton: { opacity: 0.55 },
+  setupNotice: {
+    marginTop: 17,
+    paddingHorizontal: 12,
+    paddingVertical: 11,
+    borderWidth: 1,
+    borderRadius: 13,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 9,
+  },
+  setupNoticeText: { flex: 1, fontFamily: 'Inter_500Medium', fontSize: 12, lineHeight: 18 },
+  setupHint: { marginTop: 10, fontFamily: 'Inter_400Regular', fontSize: 11, lineHeight: 17 },
   secondaryButton: {
-    minHeight: 44,
+    minHeight: 50,
     marginTop: 18,
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
   },

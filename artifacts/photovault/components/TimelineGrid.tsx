@@ -38,8 +38,10 @@ export function TimelineGrid({
 }: TimelineGridProps) {
   const { width } = useWindowDimensions();
   const colors = useColors();
-  const tileWidth = Math.floor(width / 3);
-  const rows = useMemo(() => buildTimelineRows(media), [media]);
+  const columns = 4;
+  const tileGap = 2;
+  const tileWidth = Math.floor((width - tileGap * (columns - 1)) / columns);
+  const rows = useMemo(() => buildTimelineRows(media, columns), [media]);
   const selected = useMemo(() => new Set(selectedIds), [selectedIds]);
 
   const renderItem = ({ item }: ListRenderItemInfo<TimelineRow>) => {
@@ -78,7 +80,7 @@ export function TimelineGrid({
     }
 
     return (
-      <View style={{ flexDirection: 'row' }}>
+      <View style={{ flexDirection: 'row', gap: tileGap }}>
         {item.items.map((asset) => (
           <MediaTile
             key={asset.id}
@@ -89,8 +91,8 @@ export function TimelineGrid({
             onLongPress={onLongPress ? () => onLongPress(asset) : undefined}
           />
         ))}
-        {item.items.length < 3
-          ? Array.from({ length: 3 - item.items.length }, (_, index) => (
+        {item.items.length < columns
+          ? Array.from({ length: columns - item.items.length }, (_, index) => (
               <View key={`spacer-${item.key}-${index}`} style={{ width: tileWidth, height: tileWidth }} />
             ))
           : null}

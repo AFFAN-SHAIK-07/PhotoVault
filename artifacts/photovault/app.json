@@ -2,7 +2,7 @@
   "expo": {
     "name": "PhotoVault",
     "slug": "photovault",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "photovault",
@@ -12,6 +12,7 @@
     },
     "android": {
       "package": "com.photovault.mobile",
+      "allowBackup": false,
       "blockedPermissions": [
         "android.permission.READ_MEDIA_AUDIO",
         "android.permission.WRITE_EXTERNAL_STORAGE",
@@ -26,6 +27,7 @@
     "plugins": [
       "expo-router",
       "expo-sqlite",
+      "onnxruntime-react-native",
       [
         "expo-media-library",
         {

@@ -27,7 +27,7 @@ export function ScreenHeader({
       style={[
         styles.header,
         {
-          paddingTop: (Platform.OS === 'web' ? 67 : insets.top) + 8,
+          paddingTop: (Platform.OS === 'web' ? 24 : insets.top) + 8,
           borderBottomColor: colors.border,
         },
       ]}
@@ -44,7 +44,11 @@ export function ScreenHeader({
           accessibilityLabel={actionLabel ?? title}
           testID={`header-action-${actionIcon}`}
           onPress={onAction}
-          style={({ pressed }) => [styles.action, pressed && styles.pressed]}
+          style={({ pressed }) => [
+            styles.action,
+            { backgroundColor: colors.muted },
+            pressed && styles.pressed,
+          ]}
         >
           <Feather name={actionIcon} size={21} color={colors.foreground} />
         </Pressable>
@@ -55,30 +59,32 @@ export function ScreenHeader({
 
 const styles = StyleSheet.create({
   header: {
-    minHeight: 76,
-    paddingHorizontal: 20,
-    paddingBottom: 14,
+    minHeight: 86,
+    paddingHorizontal: 22,
+    paddingTop: 4,
+    paddingBottom: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: 0,
   },
   copy: {
     flex: 1,
-    gap: 3,
+    gap: 4,
   },
   title: {
     fontFamily: 'Inter_700Bold',
-    fontSize: 26,
-    letterSpacing: -0.7,
+    fontSize: 28,
+    letterSpacing: -0.9,
   },
   subtitle: {
     fontFamily: 'Inter_400Regular',
-    fontSize: 12,
+    fontSize: 13,
   },
   action: {
-    width: 44,
-    height: 44,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     alignItems: 'center',
     justifyContent: 'center',
   },

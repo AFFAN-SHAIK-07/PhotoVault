@@ -36,7 +36,7 @@ export function AlbumCard({
           width,
           backgroundColor: colors.card,
           borderColor: colors.border,
-          borderRadius: colors.radius,
+          borderRadius: 20,
         },
       ]}
     >
@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
   },
   cover: {
     width: '100%',
-    aspectRatio: 1.2,
+    aspectRatio: 1.05,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
@@ -158,9 +158,9 @@ const styles = StyleSheet.create({
     borderRadius: 99,
   },
   countText: { fontFamily: 'Inter_600SemiBold', fontSize: 10 },
-  titleBlock: { paddingHorizontal: 11, paddingTop: 10, paddingBottom: 9 },
-  title: { fontFamily: 'Inter_600SemiBold', fontSize: 13 },
-  description: { marginTop: 4, fontFamily: 'Inter_400Regular', fontSize: 10 },
+  titleBlock: { paddingHorizontal: 13, paddingTop: 12, paddingBottom: 11 },
+  title: { fontFamily: 'Inter_600SemiBold', fontSize: 14 },
+  description: { marginTop: 4, fontFamily: 'Inter_400Regular', fontSize: 11 },
   actions: {
     minHeight: 40,
     paddingHorizontal: 8,

@@ -44,6 +44,7 @@ export default function WebRootLayout() {
               <LibraryProvider>
                 <Stack screenOptions={{ headerBackTitle: 'Back' }}>
                   <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                  <Stack.Screen name="people" options={{ headerShown: false }} />
                 </Stack>
               </LibraryProvider>
             </KeyboardProvider>

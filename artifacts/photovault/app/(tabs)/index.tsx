@@ -22,10 +22,10 @@ import { filterMedia } from '@/lib/library-utils';
 import type { MediaFilter } from '@/lib/library-utils';
 import type { MediaRecord } from '@/lib/types';
 
-const filters: { id: 'all' | 'videos' | 'favorites'; label: string }[] = [
-  { id: 'all', label: 'Everything' },
+const filters: { id: 'all' | 'photos' | 'videos'; label: string }[] = [
+  { id: 'all', label: 'All Media' },
+  { id: 'photos', label: 'Photos' },
   { id: 'videos', label: 'Videos' },
-  { id: 'favorites', label: 'Favorites' },
 ];
 
 export default function PhotosScreen() {
@@ -34,6 +34,7 @@ export default function PhotosScreen() {
   const library = useLibrary();
   const [activeFilter, setActiveFilter] = useState<MediaFilter>('all');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isSelecting, setIsSelecting] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [isActing, setIsActing] = useState(false);
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
@@ -47,14 +48,27 @@ export default function PhotosScreen() {
   );
 
   const toggleSelection = (item: MediaRecord) => {
+    setIsSelecting(true);
     setSelectedIds((current) =>
       current.includes(item.id) ? current.filter((id) => id !== item.id) : [...current, item.id],
     );
   };
 
+  const manageSelectedMedia = async () => {
+    try {
+      const MediaLibrary = await import('expo-media-library');
+      await MediaLibrary.presentPermissionsPicker(['photo', 'video']);
+      await library.refreshPermission();
+      await library.refreshLibrary();
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : 'Could not update selected media.');
+    }
+  };
+
   const allVisibleSelected =
     visibleMedia.length > 0 && visibleMedia.every((item) => selectedSet.has(item.id));
   const toggleSelectAllVisible = () => {
+    setIsSelecting(true);
     setSelectedIds((current) => {
       const visibleIds = new Set(visibleMedia.map((item) => item.id));
       return allVisibleSelected
@@ -64,7 +78,7 @@ export default function PhotosScreen() {
   };
 
   const openMedia = (item: MediaRecord) => {
-    if (selectedIds.length > 0) {
+    if (isSelecting || selectedIds.length > 0) {
       toggleSelection(item);
       return;
     }
@@ -147,7 +161,10 @@ export default function PhotosScreen() {
     );
   }
 
-  if (!library.permission?.granted || !library.isNativeMediaAvailable) {
+  if (
+    Platform.OS !== 'web' &&
+    (!library.permission?.granted || !library.isNativeMediaAvailable)
+  ) {
     return <LibraryPermissionPrompt />;
   }
 
@@ -172,7 +189,7 @@ export default function PhotosScreen() {
           style={({ pressed }) => [styles.selectAll, pressed && styles.pressed]}
         >
           <Text style={[styles.selectAllText, { color: colors.primary }]}>
-            {allVisibleSelected ? 'Clear' : 'Select'}
+            {allVisibleSelected ? 'Clear all' : 'Select all'}
           </Text>
         </Pressable>
       ) : null}
@@ -181,6 +198,62 @@ export default function PhotosScreen() {
 
   const statusHeader = (
     <View>
+      {Platform.OS === 'web' ? (
+        <View
+          style={[
+            styles.previewNotice,
+            { backgroundColor: colors.accent, borderColor: colors.border },
+          ]}
+        >
+          <Feather name="smartphone" size={16} color={colors.primary} />
+          <Text style={[styles.previewNoticeText, { color: colors.accentForeground }]}>
+            Preview mode · your phone photos appear in the Android app
+          </Text>
+        </View>
+      ) : null}
+      {library.permission?.accessPrivileges === 'limited' ? (
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => void manageSelectedMedia()}
+          style={[
+            styles.limitedAccessNotice,
+            { backgroundColor: colors.accent, borderColor: colors.border },
+          ]}
+        >
+          <Feather name="image" size={15} color={colors.primary} />
+          <Text style={[styles.limitedAccessText, { color: colors.accentForeground }]}>
+            Showing {library.media.length.toLocaleString()} items selected on your phone
+          </Text>
+          <Text style={[styles.limitedAccessAction, { color: colors.primary }]}>Manage</Text>
+        </Pressable>
+      ) : null}
+      {visibleMedia.length > 0 && !isSelecting ? (
+        <Text style={[styles.selectionHint, { color: colors.mutedForeground }]}>
+          Select photos to add them to an album
+        </Text>
+      ) : null}
+      <View style={styles.quickLinks}>
+        <QuickLink
+          icon="heart"
+          label="Favorites"
+          detail={library.media.filter((item) => item.isFavorite === 1).length.toLocaleString()}
+          onPress={() =>
+            router.push({ pathname: '/albums/[id]', params: { id: 'smart-favorites' } })
+          }
+        />
+        <QuickLink
+          icon="grid"
+          label="Collections"
+          detail={library.albums.length.toLocaleString()}
+          onPress={() => router.push('/collections')}
+        />
+        <QuickLink
+          icon="search"
+          label="Find a photo"
+          detail="Search"
+          onPress={() => router.push('/search')}
+        />
+      </View>
       {library.isScanning ? (
         <View style={[styles.scanCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={styles.scanHeader}>
@@ -245,12 +318,18 @@ export default function PhotosScreen() {
   return (
     <View style={[styles.page, { backgroundColor: colors.background }]}>
       <ScreenHeader
-        title={selectedIds.length > 0 ? `${selectedIds.length} selected` : 'Photos'}
-        subtitle={`${visibleMedia.length.toLocaleString()} ${activeFilter === 'all' ? 'items' : activeFilter} on this device`}
-        actionIcon={selectedIds.length > 0 ? 'x' : 'refresh-cw'}
-        actionLabel={selectedIds.length > 0 ? 'Clear selection' : 'Rescan library'}
+        title={selectedIds.length > 0 ? `${selectedIds.length} selected` : 'PhotoVault'}
+        subtitle={
+          isSelecting
+            ? 'Tap photos to select them for an album'
+            : 'Your photos, all in one place'
+        }
+        actionIcon={isSelecting ? 'x' : 'check-square'}
+        actionLabel={isSelecting ? 'Finish selecting' : 'Select photos'}
         onAction={() =>
-          selectedIds.length > 0 ? setSelectedIds([]) : void library.refreshLibrary()
+          isSelecting
+            ? (setSelectedIds([]), setIsSelecting(false))
+            : setIsSelecting(true)
         }
       />
       {filterRow}
@@ -347,6 +426,40 @@ export default function PhotosScreen() {
   );
 }
 
+function QuickLink({
+  icon,
+  label,
+  detail,
+  onPress,
+}: {
+  icon: React.ComponentProps<typeof Feather>['name'];
+  label: string;
+  detail: string;
+  onPress: () => void;
+}) {
+  const colors = useColors();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`${label}, ${detail}`}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.quickLink,
+        { backgroundColor: colors.card, borderColor: colors.border },
+        pressed && styles.pressed,
+      ]}
+    >
+      <View style={[styles.quickLinkIcon, { backgroundColor: colors.accent }]}>
+        <Feather name={icon} size={15} color={colors.primary} />
+      </View>
+      <Text numberOfLines={1} style={[styles.quickLinkLabel, { color: colors.foreground }]}>
+        {label}
+      </Text>
+      <Text style={[styles.quickLinkDetail, { color: colors.mutedForeground }]}>{detail}</Text>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
   page: { flex: 1 },
   loadingPage: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
@@ -360,6 +473,48 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   filterPills: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  quickLinks: { paddingHorizontal: 16, paddingTop: 15, paddingBottom: 5, flexDirection: 'row', gap: 9 },
+  previewNotice: {
+    minHeight: 43,
+    marginHorizontal: 16,
+    marginTop: 12,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderRadius: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 9,
+  },
+  previewNoticeText: { flex: 1, fontFamily: 'Inter_500Medium', fontSize: 11 },
+  limitedAccessNotice: {
+    minHeight: 43,
+    marginHorizontal: 16,
+    marginTop: 12,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderRadius: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  limitedAccessText: { flex: 1, fontFamily: 'Inter_500Medium', fontSize: 11 },
+  limitedAccessAction: { fontFamily: 'Inter_700Bold', fontSize: 11 },
+  selectionHint: {
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    fontFamily: 'Inter_500Medium',
+    fontSize: 11,
+  },
+  quickLink: {
+    flex: 1,
+    minHeight: 91,
+    padding: 10,
+    borderWidth: 1,
+    borderRadius: 17,
+  },
+  quickLinkIcon: { width: 30, height: 30, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  quickLinkLabel: { marginTop: 8, fontFamily: 'Inter_600SemiBold', fontSize: 11 },
+  quickLinkDetail: { marginTop: 3, fontFamily: 'Inter_400Regular', fontSize: 10 },
   selectAll: { minHeight: 40, paddingHorizontal: 4, alignItems: 'center', justifyContent: 'center' },
   selectAllText: { fontFamily: 'Inter_600SemiBold', fontSize: 11 },
   scanCard: {

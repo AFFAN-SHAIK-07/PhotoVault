@@ -50,14 +50,32 @@ export function LibraryPermissionPrompt() {
       ]}
     >
       <Text style={[styles.headline, { color: colors.foreground }]}>
-        Photo library
+        Your whole gallery,
+        {'\n'}beautifully organized.
       </Text>
       <Text style={[styles.description, { color: colors.mutedForeground }]}>
-        Allow access to show photos, videos, and screenshots already stored on this phone.
-        PhotoVault keeps the originals in place and does not copy or upload them.
+        Bring your camera roll, videos, screenshots, and shared app media together. Your originals
+        stay right where they are.
       </Text>
 
       <View style={styles.bottom}>
+        <View style={[styles.benefitCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={[styles.benefitIcon, { backgroundColor: colors.accent }]}>
+            <Feather name="image" size={21} color={colors.primary} />
+          </View>
+          <View style={styles.benefitCopy}>
+            <Text style={[styles.benefitTitle, { color: colors.foreground }]}>
+              One home for every moment
+            </Text>
+            <Text style={[styles.benefitDetail, { color: colors.mutedForeground }]}>
+              Browse photos and videos by date, then build albums from the moments you choose.
+            </Text>
+          </View>
+        </View>
+        <Text style={[styles.privacyNote, { color: colors.mutedForeground }]}>
+          PhotoVault indexes media that Android makes available. Nothing is copied or uploaded.
+          WhatsApp and Snapchat media appears when it is saved to your shared gallery.
+        </Text>
         {error ? (
           <Text accessibilityRole="alert" style={[styles.error, { color: colors.destructive }]}>
             {error}
@@ -91,7 +109,7 @@ export function LibraryPermissionPrompt() {
                   ? 'Checking access…'
                   : blocked
                     ? 'Open Settings'
-                    : 'Allow media access'}
+                    : 'Allow photos & videos'}
               </Text>
               {!permissionChecking ? (
                 <Feather name={blocked ? 'settings' : 'arrow-right'} size={18} color={colors.primaryForeground} />
@@ -109,7 +127,7 @@ export function LibraryPermissionPrompt() {
               </Pressable>
             ) : (
               <Text style={[styles.permissionNote, { color: colors.mutedForeground }]}>
-                You can change this permission at any time in Android settings.
+                Choose full access to see your whole gallery. Limited access shows only selected items.
               </Text>
             )}
           </>
@@ -120,15 +138,15 @@ export function LibraryPermissionPrompt() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, justifyContent: 'center', paddingHorizontal: 24, gap: 20 },
+  screen: { flex: 1, justifyContent: 'center', paddingHorizontal: 24, gap: 17 },
   headline: {
     fontFamily: 'Inter_700Bold',
-    fontSize: 30,
-    lineHeight: 37,
-    letterSpacing: -0.8,
+    fontSize: 34,
+    lineHeight: 40,
+    letterSpacing: -1.1,
   },
   description: {
-    maxWidth: 330,
+    maxWidth: 350,
     fontFamily: 'Inter_400Regular',
     fontSize: 15,
     lineHeight: 23,
@@ -136,10 +154,34 @@ const styles = StyleSheet.create({
   bottom: {
     gap: 14,
   },
+  benefitCard: {
+    padding: 16,
+    borderWidth: 1,
+    borderRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 13,
+  },
+  benefitIcon: {
+    width: 43,
+    height: 43,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  benefitCopy: { flex: 1, gap: 5 },
+  benefitTitle: { fontFamily: 'Inter_600SemiBold', fontSize: 14 },
+  benefitDetail: { fontFamily: 'Inter_400Regular', fontSize: 12, lineHeight: 18 },
+  privacyNote: {
+    paddingHorizontal: 3,
+    fontFamily: 'Inter_400Regular',
+    fontSize: 11,
+    lineHeight: 17,
+  },
   primaryButton: {
-    minHeight: 56,
+    minHeight: 58,
     paddingHorizontal: 20,
-    borderRadius: 16,
+    borderRadius: 18,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
